@@ -4,7 +4,7 @@
  *
  * start date: 27 Jan 2021
  * second rewritten version 14 feb 2021
- * version 0.5
+ * version 0.6 now adding comments and flow information 5 March 21
  *
  *
  */
@@ -15,32 +15,68 @@
 #include <wchar.h>      /* wint_t */
 #include <ctype.h>
 #include <stdlib.h>
+// command line syntax
+// ShushaToUnicode <input file>
+// output is on standard output needed to be directed to output file as
+// ShushaToUnicode inputfile > outputfile
+
+// I am  assuming  input file having shusha code  is in utf8 . Most of key codes are 7 bit assci with few as
+// 8 bits.  As I don't have shusha technical details I have collected code relation with devganari verns(वर्ण)
+// from web pages available in shusha on abhivyakti.org. The difference among shusha, shusha02 and shusha05 are also
+// unclear to me. Also used keyboard layout found on web to get key vs hindi chars.
+
+// I have used  https://www.pramukhfontconverter.com/hindi/shusha-to-unicode  web service to check
+// conversion or to understand shusha codes
 
 // prototypes
-void convertShushToUtf16();
-void encodeToUtf8(wint_t codeToUse);
+// shusha utf8 is converted to shushautf16 as internally program works on 16 bit codes
+void convertShushaUtf8ToShushaUtf16();
+
+// utf16 is converted to  utf8 for saving and/or display on standard output
+void encodeUtf16ToUtf8(wint_t codeToUse);
+
+//the r which comes on top of character (र्र ) needs to be adjusted due to different way it is used
+// in shusha and unicode hindi
 void adjustForTopR();
+
+// r coming on side of character(प्र) has to be handled differently
 void adjustForSideR();
+
+// check if character at  input offset is a vowel excluding small i.
+// small i is prefix to consonant.
 int isVowel(int indexOffSet);
-void shushaToUnicode();
+
+// converts shusha utf16 to devnagari/hindi utf16 code.
+//mapping needs some processing and adding more than one code
+void shushaUtf16ToHindiUtf16();
+
+// for some single shusha code we need two unicodes
 void doubleUnicode(wint_t codeToUse);
+
+// single code mapping
 void singleUnicode(wint_t codeToUse);
+
+// dot on top of character(ं) is to be moved after matras in unicode. Shusha puts is before matras
 int checkswapForM();
+
+//0x2C    ,  काॅमा  नीचे वाला बिंदू मान कर चल रहा हूँ। ox093C(़)
 void singleUnicodeWithNextCamma(wint_t codeToUse);
+
+//Check if small i was there. This is indicated by var iFlag.
 void nextCodeWithIflagCheck();
 
 
 //read shusha character one word at a time end of word is nil terminated. It is utf8 coded
-unsigned char shushaBuf[500]; // code from file
-int shushaIndex;
+unsigned char shushaUtf8InBuf[500]; // code from file
+int shushaUtf8InBufIndex;
 
-// convert shusha utf8 to shusha utf16. Nil teminated
-wint_t shushaUtf16[1000]; // file byte code to utf16 but still shusha code
-int shushaUtf16Index;
+// convert shusha utf8 to shusha utf16. Nil terminated
+wint_t shushaUtf16Buf[1000]; // file byte code to utf16 but still shusha code
+int shushaUtf16BufIndex;
 
 // devnagiri utf16,  converted code from shushutf16. Nil teminated
-wint_t unicodeBuf[1000];// utf16 converted to standard devnagari utf16
-int unicodeIndex;
+wint_t hindiUtf16Buf[1000];// utf16 converted to standard devnagari utf16
+int hindiUtf16BufIndex;
 
 // final devnagari utf8 code.. Nil teminated
 unsigned char utf8Buffer[2000]; // devnagari utf8 code
@@ -88,8 +124,8 @@ int main(int argc, char *argv[])
 	 {
 		 // collect word with leading white spaces
 		 // index to input shusha code word collecting buffer initialised and buffer nil teminated
-		 shushaIndex = 0;
-		 shushaBuf[shushaIndex] = 0x00;
+		 shushaUtf8InBufIndex = 0;
+		 shushaUtf8InBuf[shushaUtf8InBufIndex] = 0x00;
 		 //read leading white spaces
 		 while(doneFlag == 0)
 		 {
@@ -99,8 +135,8 @@ int main(int argc, char *argv[])
 				 doneFlag = 1;
 				 break;
 			 }
-			 shushaBuf[shushaIndex++] = charRead;
-			 shushaBuf[shushaIndex] = 0x00;
+			 shushaUtf8InBuf[shushaUtf8InBufIndex++] = charRead;
+			 shushaUtf8InBuf[shushaUtf8InBufIndex] = 0x00;
 			 if(isspace(charRead) == 0) // start of word with alphabet
 			 {
 				 break;
@@ -115,40 +151,40 @@ int main(int argc, char *argv[])
 				 doneFlag = 1;
 		 		 break;
 		 	 }
-			shushaBuf[shushaIndex++] = charRead;
-			shushaBuf[shushaIndex] = 0x00;
+			shushaUtf8InBuf[shushaUtf8InBufIndex++] = charRead;
+			shushaUtf8InBuf[shushaUtf8InBufIndex] = 0x00;
 	 		 if(isspace(charRead) != 0)
 	 		 {
 				 break;
 	 		 }
 		 }
 		 // convert read shusha utf8 codes in to utf16 shusha code
-		 convertShushToUtf16();
+		 convertShushaUtf8ToShushaUtf16();
 
 		 // this fuction converts shusha hindi code to unicode 16 bit hindicode one word at a time
-		shushaToUnicode();
+		shushaUtf16ToHindiUtf16();
 
 		// to uf8 from devnagari unicode
 		int outIndex;
 		// unicode to utf8 convertion only hindi
 		outIndex = 0;
 		utf8Index = 0;
-		while(unicodeBuf[outIndex] != 0x0000)
+		while(hindiUtf16Buf[outIndex] != 0x0000)
 		{
 			wint_t shushaUtf16CodeTemp;
 			// correct for आ ओ औ
-			shushaUtf16Code = unicodeBuf[outIndex];
+			shushaUtf16Code = hindiUtf16Buf[outIndex];
 			//combined few devnagari varan with matra
 			switch(shushaUtf16Code)
 			{
 			case 0x0905:  // अ followed by ा ो ौ
-				shushaUtf16CodeTemp = unicodeBuf[outIndex + 1];
+				shushaUtf16CodeTemp = hindiUtf16Buf[outIndex + 1];
 				switch(shushaUtf16CodeTemp)
 				{
 				case 0x093E: // it is to replaced with आ
 					shushaUtf16Code = 0x0906;
 					outIndex++;
-					shushaUtf16CodeTemp = unicodeBuf[outIndex + 1];
+					shushaUtf16CodeTemp = hindiUtf16Buf[outIndex + 1];
 					if(shushaUtf16CodeTemp == 0x0945) // if ॅ this then change to ॉ
 					{
 						shushaUtf16Code = 0x0911;
@@ -167,7 +203,7 @@ int main(int argc, char *argv[])
 					break;
 				}
 			case 0x093E:
-				shushaUtf16CodeTemp = unicodeBuf[outIndex + 1];
+				shushaUtf16CodeTemp = hindiUtf16Buf[outIndex + 1];
 				if(shushaUtf16CodeTemp == 0x0945) // if ॅ this then change to ॉ
 				{
 					shushaUtf16Code = 0x0949; // convert to ॉ
@@ -175,7 +211,7 @@ int main(int argc, char *argv[])
 				}
 				break;
 			case 0x090F: // ै ए े  correction
-				shushaUtf16CodeTemp = unicodeBuf[outIndex + 1];
+				shushaUtf16CodeTemp = hindiUtf16Buf[outIndex + 1];
 				if( (shushaUtf16CodeTemp == 0x0947) || (shushaUtf16CodeTemp == 0x0948))// if ॅ this then change to ॉ
 				{
 					shushaUtf16Code = 0x0910; // convert to एे
@@ -186,7 +222,7 @@ int main(int argc, char *argv[])
 				break;
 
 			}
-			encodeToUtf8(shushaUtf16Code);
+			encodeUtf16ToUtf8(shushaUtf16Code);
 			outIndex++;
 		}
 				//  will replace for writing directly to file
@@ -209,13 +245,13 @@ void singleUnicode(wint_t codeToUse)
 	halantChar = 0; // indicates it is char with halant. Single code does not have halant
 
 	// make available next code
-	shushaUtf16Index++;
-	shushaUtf16Code = shushaUtf16[shushaUtf16Index];
+	shushaUtf16BufIndex++;
+	shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 // save the converted unicode
-	unicodeBuf[unicodeIndex++] = codeToUse;
+	hindiUtf16Buf[hindiUtf16BufIndex++] = codeToUse;
 	if(iFlag)
 	{
-		unicodeBuf[unicodeIndex++] = 0x093F; // This is ि मात्रा   कोड
+		hindiUtf16Buf[hindiUtf16BufIndex++] = 0x093F; // This is ि मात्रा   कोड
 		iFlag = 0;
 	}
 }
@@ -223,42 +259,42 @@ void singleUnicode(wint_t codeToUse)
 void doubleUnicode(wint_t codeToUse)
 {
 	halantChar = 0;
-	unicodeBuf[unicodeIndex++] = codeToUse;
+	hindiUtf16Buf[hindiUtf16BufIndex++] = codeToUse;
 	// make available next code
-	shushaUtf16Index++;
-	shushaUtf16Code = shushaUtf16[shushaUtf16Index];
+	shushaUtf16BufIndex++;
+	shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 	if(shushaUtf16Code == 0x0061) // a ा
 	{
-		shushaUtf16Index++;
-		shushaUtf16Code = shushaUtf16[shushaUtf16Index];
+		shushaUtf16BufIndex++;
+		shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 		if(shushaUtf16Code == 0x002C) // ,  काॅमा  नीचे वाला बिंदू मान कर चल रहा हूँ। ox093C(़)
 		{
-			unicodeBuf[unicodeIndex++] = 0x093C;
-			shushaUtf16Index++;
-			shushaUtf16Code = shushaUtf16[shushaUtf16Index];
+			hindiUtf16Buf[hindiUtf16BufIndex++] = 0x093C;
+			shushaUtf16BufIndex++;
+			shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 		}
 		if(shushaUtf16Code == 0x0060) //   `       ्र   0x094D(्)  0x0930(र )
 		{
-			unicodeBuf[unicodeIndex++] = 0x094D;
-			unicodeBuf[unicodeIndex++] = 0x0930;
-			shushaUtf16Index++;
-			shushaUtf16Code = shushaUtf16[shushaUtf16Index];
+			hindiUtf16Buf[hindiUtf16BufIndex++] = 0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] = 0x0930;
+			shushaUtf16BufIndex++;
+			shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 		}
 	}
 	else
 	{
-		unicodeBuf[unicodeIndex++] = 0x094D;
+		hindiUtf16Buf[hindiUtf16BufIndex++] = 0x094D;
 		halantChar = 1;// it is half varan
 	}
     // ि की मात्रा  तो नहीं लगानी?
-	if( (iFlag) && (unicodeBuf[unicodeIndex - 1] != 0x094D))
+	if( (iFlag) && (hindiUtf16Buf[hindiUtf16BufIndex - 1] != 0x094D))
 	{
-		unicodeBuf[unicodeIndex++] = 0x093F;
+		hindiUtf16Buf[hindiUtf16BufIndex++] = 0x093F;
 		iFlag = 0;
 	}
 }
 // index in input to shusha to utf16 converted word, intialised and buffer nil terminated
-void convertShushToUtf16()
+void convertShushaUtf8ToShushaUtf16()
 {
 	unsigned char currentByte;
 	unsigned char secondByte;
@@ -267,19 +303,19 @@ void convertShushToUtf16()
 	unsigned char tempByte3;
 	wint_t currentUtf16;
 
-	shushaUtf16Index = 0x00;
-	shushaUtf16[shushaUtf16Index] = 0x0000;
+	shushaUtf16BufIndex = 0x00;
+	shushaUtf16Buf[shushaUtf16BufIndex] = 0x0000;
 
 	int i = 0;
-	currentByte = shushaBuf[i];
+	currentByte = shushaUtf8InBuf[i];
 	 while( currentByte) // nil byte end of word
 	 {
 		 // check if it has 8th bit zero. if yes then it is seven bit ascii
 		 if((currentByte  & 0x80) == 0x00 ) // it is single byte
 		 {
 			 currentUtf16 = 0x0000 + currentByte;
-			 shushaUtf16[shushaUtf16Index++] = currentUtf16;
-			 shushaUtf16[shushaUtf16Index] = 0x0000;
+			 shushaUtf16Buf[shushaUtf16BufIndex++] = currentUtf16;
+			 shushaUtf16Buf[shushaUtf16BufIndex] = 0x0000;
 			 //printf("0x%04X ", currentUtf16);
 		 }
 		 else
@@ -290,7 +326,7 @@ void convertShushToUtf16()
 				 // get top five bits from first byte
 				 tempByte1 = currentByte & 0x1F;
 				 i++;
-				 secondByte = shushaBuf[i];
+				 secondByte = shushaUtf8InBuf[i];
 				 //get lower six bits from second byte
 				 tempByte2 = secondByte & 0x3F;
 				 // move lower 2 bit to position 6 and 7 to be added to form lower byte of two bytes 0x07ff max value code
@@ -303,8 +339,8 @@ void convertShushToUtf16()
 				 currentUtf16  = (currentUtf16  << 8) & 0x0700;
 				 // add lower byte to form full unicode
 				 currentUtf16  = (currentUtf16  | tempByte2) & 0x07FF;
-				 shushaUtf16[shushaUtf16Index++] = currentUtf16;
-				 shushaUtf16[shushaUtf16Index] = 0x0000;
+				 shushaUtf16Buf[shushaUtf16BufIndex++] = currentUtf16;
+				 shushaUtf16Buf[shushaUtf16BufIndex] = 0x0000;
 				// printf("0x%04X ", currentUtf16);
 			 }
 			 else
@@ -318,7 +354,7 @@ void convertShushToUtf16()
 					 tempByte1 = (tempByte1 << 4 ) & 0xF0;
 					 // read next byte of utf8 code
 					 i++;
-					 secondByte = shushaBuf[i];
+					 secondByte = shushaUtf8InBuf[i];
 					 //get lower four bits(3,2,1,0) of MS byte  and higher 2 bits (7,6) from second byte
 					 tempByte2 = secondByte & 0x3F;
 					 tempByte3 = (tempByte2 >> 2) & 0x0F;
@@ -334,7 +370,7 @@ void convertShushToUtf16()
 					 tempByte3 = (tempByte3 << 6) & 0xC0;
 					 // third byte of utf8
 					 i++;
-					 secondByte = shushaBuf[i];
+					 secondByte = shushaUtf8InBuf[i];
 					 // get last six bits (5,4,3,2,1,0) of ls byte
 					 tempByte2 = secondByte & 0x3F;
 					 // combined both to get all 8 bits of ls byte
@@ -343,8 +379,8 @@ void convertShushToUtf16()
 					 currentUtf16 = currentUtf16 | tempByte3;
 
 					 // save the same
-					 shushaUtf16[shushaUtf16Index++] = currentUtf16;
-					 shushaUtf16[shushaUtf16Index]   = 0x0000;
+					 shushaUtf16Buf[shushaUtf16BufIndex++] = currentUtf16;
+					 shushaUtf16Buf[shushaUtf16BufIndex]   = 0x0000;
 					// printf("0x%04X ", currentUtf16);
 
 				 }
@@ -357,7 +393,7 @@ void convertShushToUtf16()
 			 }
 		 }
 		 i++;
-		currentByte = shushaBuf[i];
+		currentByte = shushaUtf8InBuf[i];
 		adjustForTopR();
 		adjustForSideR();
 	 }
@@ -370,18 +406,18 @@ void adjustForTopR()
 	wint_t  tempCode1;
 	wint_t  tempCode2;
 	int tempCount;
-	if(shushaUtf16Index < 2)
+	if(shushaUtf16BufIndex < 2)
 	{
 		return;
 	}
-	tempCode1 = shushaUtf16[shushaUtf16Index - 1]; // last char in buffer check for -
-	tempCode2 = shushaUtf16[shushaUtf16Index - 2]; // next last check for [
+	tempCode1 = shushaUtf16Buf[shushaUtf16BufIndex - 1]; // last char in buffer check for -
+	tempCode2 = shushaUtf16Buf[shushaUtf16BufIndex - 2]; // next last check for [
 	if( (tempCode1 == 0x002D) && (tempCode2 == 0x005B)) // will be handled in unicode devnagari code conversion
 	{
 		return;
 	}
 	tempCount = 2; // this offset is where we want to search back till we find character without ha
-	if ((tempCode1 != 0x002D) || (shushaUtf16Index < 2))
+	if ((tempCode1 != 0x002D) || (shushaUtf16BufIndex < 2))
 	{
 		return;
 	}
@@ -393,7 +429,7 @@ void adjustForTopR()
 			j = 0;
     		while(halfVaran[j]) // search for match in array of half chars
 			 {
-				if( halfVaran[j] == shushaUtf16[shushaUtf16Index - (tempCount + 1)] )
+				if( halfVaran[j] == shushaUtf16Buf[shushaUtf16BufIndex - (tempCount + 1)] )
 				{
 					 tempCount++;
 					 break;
@@ -402,9 +438,9 @@ void adjustForTopR()
 			 }
 			for(int i = 2; i <= tempCount; i++)
 			{
-				shushaUtf16[shushaUtf16Index  - (i - 1)] = shushaUtf16[shushaUtf16Index  - i];
+				shushaUtf16Buf[shushaUtf16BufIndex  - (i - 1)] = shushaUtf16Buf[shushaUtf16BufIndex  - i];
 			}
-			shushaUtf16[shushaUtf16Index  - tempCount] = 0x002D;
+			shushaUtf16Buf[shushaUtf16BufIndex  - tempCount] = 0x002D;
 			break;
 		 }
 		else
@@ -421,25 +457,25 @@ void adjustForSideR()
 	wint_t  tempCode1;
 	wint_t  tempCode2;
 	int halfVaranFound = 0;
-	if(shushaUtf16Index < 2)
+	if(shushaUtf16BufIndex < 2)
 	{
 		return;
 	}
-	tempCode1 = shushaUtf16[shushaUtf16Index - 1]; // last char in buffer check for `
-	tempCode2 = shushaUtf16[shushaUtf16Index - 2]; // vowel to exchange if present
+	tempCode1 = shushaUtf16Buf[shushaUtf16BufIndex - 1]; // last char in buffer check for `
+	tempCode2 = shushaUtf16Buf[shushaUtf16BufIndex - 2]; // vowel to exchange if present
 
-	if ((tempCode1 != 0x0060) || (shushaUtf16Index < 2))
+	if ((tempCode1 != 0x0060) || (shushaUtf16BufIndex < 2))
 	{
 		return;
 	}
 	// half varan followed by a and then `
 	int j;
 	j = 0;
-	if(shushaUtf16Index > 2) // make sure it has aleast thre chars
+	if(shushaUtf16BufIndex > 2) // make sure it has aleast thre chars
 	{
 		while(halfVaran[j]) // search for match in array of half chars
 		{
-			if( halfVaran[j] == shushaUtf16[shushaUtf16Index - 3] )
+			if( halfVaran[j] == shushaUtf16Buf[shushaUtf16BufIndex - 3] )
 			{
 				halfVaranFound = 1;
 				break;
@@ -449,8 +485,8 @@ void adjustForSideR()
 	}
 	if ( (isVowel(2) == 1) &&  (halfVaranFound == 0))// it is  vowel. check for half char
 	{
-		shushaUtf16[shushaUtf16Index - 2] = tempCode1;
-		shushaUtf16[shushaUtf16Index - 1] = tempCode2;
+		shushaUtf16Buf[shushaUtf16BufIndex - 2] = tempCode1;
+		shushaUtf16Buf[shushaUtf16BufIndex - 1] = tempCode2;
 	}
 }
 
@@ -458,11 +494,11 @@ void adjustForSideR()
 int isVowel(int indexOffSet)
 {
 	wint_t tempChar;
-	if((shushaUtf16Index - indexOffSet) < 0)
+	if((shushaUtf16BufIndex - indexOffSet) < 0)
 	{
 		return 0;
 	}
-	tempChar = shushaUtf16[shushaUtf16Index - indexOffSet];
+	tempChar = shushaUtf16Buf[shushaUtf16BufIndex - indexOffSet];
 	int i = 0;
 	while(shushaVowelList[i])
 	{
@@ -478,8 +514,9 @@ int isVowel(int indexOffSet)
 	}
 	return 0;
 }
+
 //utf16 to utf8 conversion. surrogates not handled
-void encodeToUtf8(wint_t codeToUse)
+void encodeUtf16ToUtf8(wint_t codeToUse)
 {
 	unsigned char tempByte1;
 	unsigned char tempByte2;
@@ -534,47 +571,47 @@ void encodeToUtf8(wint_t codeToUse)
 int checkswapForM()
 {
 	// make available next code
-	shushaUtf16Index++;
-	shushaUtf16Code = shushaUtf16[shushaUtf16Index];
-	wint_t oCurrection = shushaUtf16[shushaUtf16Index + 1];
+	shushaUtf16BufIndex++;
+	shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
+	wint_t oCurrection = shushaUtf16Buf[shushaUtf16BufIndex + 1];
 	switch(shushaUtf16Code)
 	{
 		case 0x0061: //a
 			switch (oCurrection)
 			{
 			case 0x006F :  // 6F treat it as ो  small o
-				unicodeBuf[unicodeIndex++] =  0x094B;
-				shushaUtf16Index++;
+				hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094B;
+				shushaUtf16BufIndex++;
 				break;
 			case 0x004F :  // 4F treat it as ौ capital O
-				unicodeBuf[unicodeIndex++] =  0x094C;
-				shushaUtf16Index++;
+				hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094C;
+				shushaUtf16BufIndex++;
 				break;
 			default :
-				unicodeBuf[unicodeIndex++] = 0x093E;
+				hindiUtf16Buf[hindiUtf16BufIndex++] = 0x093E;
 			}
 			return 0;
 		case 0x0049: //   I   ी   0x0940( ी)
-			unicodeBuf[unicodeIndex++] = 0x0940;
+			hindiUtf16Buf[hindiUtf16BufIndex++] = 0x0940;
 			return 0;
 		case 0x004F: //ै की मात्रा 0x0948
-			unicodeBuf[unicodeIndex++] = 0x0948;
+			hindiUtf16Buf[hindiUtf16BufIndex++] = 0x0948;
 			return 0;
 		case 0x006F: ////   o  े    0x0947( े  )
-			unicodeBuf[unicodeIndex++] = 0x0947;
+			hindiUtf16Buf[hindiUtf16BufIndex++] = 0x0947;
 			return 0;
 		case 0x0055: //   U    ू    0x0942( ू )
-			unicodeBuf[unicodeIndex++] = 0x0942;
+			hindiUtf16Buf[hindiUtf16BufIndex++] = 0x0942;
 			return 0;
 		case 0x0075: //   u   ु  0x0941(   ु  )
-			unicodeBuf[unicodeIndex++] = 0x0941;
+			hindiUtf16Buf[hindiUtf16BufIndex++] = 0x0941;
 			return 0;
 		case 0x0052: //    R     ृ    0x0943(  ृ)
-			unicodeBuf[unicodeIndex++] = 0x0943;
+			hindiUtf16Buf[hindiUtf16BufIndex++] = 0x0943;
 			return 0;
 		default:
 			//printf(" No voval 0x%02x\n", shushaUtf16Code);
-			shushaUtf16Index--;
+			shushaUtf16BufIndex--;
 			return 0;
 	}
 }
@@ -583,26 +620,26 @@ void singleUnicodeWithNextCamma(wint_t codeToUse)
 {
 	halantChar = 0;
 	// make available next code
-	shushaUtf16Index++;
-	shushaUtf16Code = shushaUtf16[shushaUtf16Index];
-	unicodeBuf[unicodeIndex++] = codeToUse;
+	shushaUtf16BufIndex++;
+	shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
+	hindiUtf16Buf[hindiUtf16BufIndex++] = codeToUse;
 		if(iFlag)
 		{
 			if(shushaUtf16Code == 0x002C) // ,  काॅमा  नीचे वाला बिंदू मान कर चल रहा हूँ। ox093C(़)
 			{
-				unicodeBuf[unicodeIndex++] = 0x093C;
-				shushaUtf16Index++;
-				shushaUtf16Code = shushaUtf16[shushaUtf16Index];
+				hindiUtf16Buf[hindiUtf16BufIndex++] = 0x093C;
+				shushaUtf16BufIndex++;
+				shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 			}
 			if(shushaUtf16Code == 0x60) //     `       ्र   0x094D(्)  0x0930(र )
 			{
-				unicodeBuf[unicodeIndex++] =  0x094D;
-				unicodeBuf[unicodeIndex++] =  0x0930;
-				shushaUtf16Index++;
-				shushaUtf16Code = shushaUtf16[shushaUtf16Index];
+				hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
+				hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0930;
+				shushaUtf16BufIndex++;
+				shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 			}
 
-			unicodeBuf[unicodeIndex++] = 0x093F;
+			hindiUtf16Buf[hindiUtf16BufIndex++] = 0x093F;
 			iFlag = 0;
 		}
 }
@@ -611,24 +648,24 @@ void nextCodeWithIflagCheck()
 {
 	if( iFlag)
 	{
-		unicodeBuf[unicodeIndex++] = 0x093F;
+		hindiUtf16Buf[hindiUtf16BufIndex++] = 0x093F;
 		iFlag = 0;
 	}
 	halantChar = 0;
-	shushaUtf16Index++;
-	shushaUtf16Code = shushaUtf16[shushaUtf16Index];
+	shushaUtf16BufIndex++;
+	shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 }
 // main fuction with big switch. Can not think any other algorithm
-void shushaToUnicode()
+void shushaUtf16ToHindiUtf16()
 {
 	int iTemp;
 	//printf("In code converter\n");
-	shushaUtf16Index = 0;
-	unicodeIndex = 0;
+	shushaUtf16BufIndex = 0;
+	hindiUtf16BufIndex = 0;
 	wint_t oCurrection;
 	halantChar = 0;
 	// get first code of word being converted
-	shushaUtf16Code = shushaUtf16[shushaUtf16Index];
+	shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 
 	//end of word is nil terminated
 	while (shushaUtf16Code != 0x0000 )
@@ -643,26 +680,26 @@ void shushaToUnicode()
 			doubleUnicode( 0x0916);
 			break;
 		case 0x0024: //  $   रू                    0x0930(र)  0x0942(ू)   रू
-			unicodeBuf[unicodeIndex++] = 0x0930;
+			hindiUtf16Buf[hindiUtf16BufIndex++] = 0x0930;
 			singleUnicode(0x0942);
 			break;
 		case 0x0025 : //  %  त्                     0x0924(त)    0x094D(्)
 			doubleUnicode(0x0924);
 			break;
 		case 0x0026: //  &  ज्ञ                     0x091C(ज)  0x094D(्)   0x091E(ञ)  ज्ञ
-			unicodeBuf[unicodeIndex++] = 0x091C;
-			unicodeBuf[unicodeIndex++] = 0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] = 0x091C;
+			hindiUtf16Buf[hindiUtf16BufIndex++] = 0x094D;
 			singleUnicode(0x091E);
 			break;
 		case 0x0028: //  (  ह्य   "ह्  य"         0x0939(ह)  0x094D(्) 0x092F(य)
-			unicodeBuf[unicodeIndex++] =  0x0939;
-			unicodeBuf[unicodeIndex++] =  0x094D;
-			unicodeBuf[unicodeIndex++] =  0x092F;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0939;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x092F;
 		    nextCodeWithIflagCheck();
 			break;
 		case 0x0029: //  )   हृ " ह ृ"           0x0939(ह)  0x0943(ृ)
-			unicodeBuf[unicodeIndex++] =  0x0939;
-			unicodeBuf[unicodeIndex++] =  0x0943;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0939;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0943;
 			nextCodeWithIflagCheck();
 			break;
 		case 0x002A: //  *  ह्                     0x0939(ह)  0x094D(्)
@@ -670,59 +707,59 @@ void shushaToUnicode()
 			break;
 		case 0x002B: //   +  ट्ट                   0x091F(ट)  0x094D(्)  0x091F(ट)
 			singleUnicode(0x091F);
-			unicodeBuf[unicodeIndex++] =  0x094D;
-			unicodeBuf[unicodeIndex++] =  0x091F;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x091F;
 			break;
 		case 0x002C: //    ,  काॅमा  नीचे वाला बिंदू मान कर चल रहा हूँ। ox093C(़)
 			if(halantChar == 1)
 			{
-				shushaUtf16Index++;
-				shushaUtf16Code = shushaUtf16[shushaUtf16Index];
+				shushaUtf16BufIndex++;
+				shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 				if(shushaUtf16Code == 0x61) // a ा
 				{
-					shushaUtf16Index++;
-					shushaUtf16Code = shushaUtf16[shushaUtf16Index];
-					unicodeIndex--;
-					unicodeBuf[unicodeIndex++] = 0x093C;
+					shushaUtf16BufIndex++;
+					shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
+					hindiUtf16BufIndex--;
+					hindiUtf16Buf[hindiUtf16BufIndex++] = 0x093C;
 				}
 				else
 				{
-					shushaUtf16Index--;
+					shushaUtf16BufIndex--;
 					singleUnicode(0x093C);
 				}
 			}
 			else
 			{
-				//printf("\n(0)0x%02x 0x%02x\n", shushaIndex , shushaBuf[shushaIndex]);
-				if( (shushaUtf16Index == 0x0000) || (shushaUtf16[shushaUtf16Index - 1] == 0x002C) || (shushaUtf16[shushaUtf16Index - 1] == 0x0020))
+				//printf("\n(0)0x%02x 0x%02x\n", shushaUtf8InBufIndex , shushaUtf8InBuf[shushaUtf8InBufIndex]);
+				if( (shushaUtf16BufIndex == 0x0000) || (shushaUtf16Buf[shushaUtf16BufIndex - 1] == 0x002C) || (shushaUtf16Buf[shushaUtf16BufIndex - 1] == 0x0020))
 				{
 					singleUnicode(0x002E);
-					//printf("\n(1)0x%02x 0x%02x\n", shushaUtf16 , shushaUtf16[shushaUtf16Index]);
+					//printf("\n(1)0x%02x 0x%02x\n", shushaUtf16Buf , shushaUtf16Buf[shushaUtf16BufIndex]);
 				}
 				else
 				{
 					singleUnicode(0x093C);
-					//printf("\n(2)0x%02x 0x%02x\n", shushaUtf16 , shushaUtf16[shushaUtf16Index]);
+					//printf("\n(2)0x%02x 0x%02x\n", shushaUtf16Buf , shushaUtf16Buf[shushaUtf16BufIndex]);
 				}
 			}
 			halantChar = 0;
 			break;
 		case 0x002D: //    -  र् ऊपर अाने वाला जैसे र्र    0x0930(र)  0x094D(्)
 			halantChar = 0;
-			shushaUtf16Index++;
-			shushaUtf16Code = shushaUtf16[shushaUtf16Index];
-			unicodeBuf[unicodeIndex++] =  0x0930;
-			unicodeBuf[unicodeIndex++] =  0x094D;
+			shushaUtf16BufIndex++;
+			shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0930;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
 			break;
 		case 0x002E: //     . डॉट  । पूर्णविराम            0x964(।)
 			singleUnicode(0x0964);
 			break;
 		case 0x002F: //      /   ( ट्र  ट)   नीचे अाया र     0x091F(ट)  0x094D(्)  0x0930(र)
-			unicodeBuf[unicodeIndex++] =  0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
 			singleUnicode(0x0930);
 			break;
 		case 0x003A: //     :    ः   0x0903
-			if(shushaUtf16Index == 0x0000)
+			if(shushaUtf16BufIndex == 0x0000)
 			{
 				singleUnicode(0x003A);
 			}
@@ -741,8 +778,8 @@ void shushaToUnicode()
 			singleUnicode(0x0919);
 			break;
 		case 0x003E: //     >  क्त          0x915(क) 0x094D(्)   0x0924(त)
-			unicodeBuf[unicodeIndex++] = 0x0915;
-			unicodeBuf[unicodeIndex++] =  0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] = 0x0915;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
 			singleUnicode(0x0924);
 			break;
 		case 0x003F: //    ?   ऋ          0x90B(ऋ)
@@ -764,8 +801,8 @@ void shushaToUnicode()
 			singleUnicodeWithNextCamma(0x0921);
 			break;
 		case 0x0045: //    E   श्र्      0x936(श)  0x094D(्)  0x930(र)  0x094D(्)
-			unicodeBuf[unicodeIndex++] =  0x0936;
-			unicodeBuf[unicodeIndex++] =  0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0936;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
 			doubleUnicode(0x0930);
 			break;
 		case 0x0046: //    F    फ्     0x092B(फ)  0x094D(्)
@@ -794,7 +831,7 @@ void shushaToUnicode()
 			{
 				if(iFlag)
 					{
-						unicodeBuf[unicodeIndex++] = 0x093F;
+						hindiUtf16Buf[hindiUtf16BufIndex++] = 0x093F;
 						iFlag = 0;
 					}
 				singleUnicode(0x0902);
@@ -825,13 +862,13 @@ void shushaToUnicode()
 			singleUnicode(0x0942);
 			break;
 		case 0x0056: //    V   द्य    "द् य"    0x0926(द)  0x094D(्)  0x092F(य )
-			unicodeBuf[unicodeIndex++] =  0x0926;
-			unicodeBuf[unicodeIndex++] =  0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0926;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
 			singleUnicode(0x092F);
 			break;
 		case 0x0057: //    W     द्व       0x0926(द)  0x094D(्)  0x0935(व )
-			unicodeBuf[unicodeIndex++] =  0x0926;
-			unicodeBuf[unicodeIndex++] =  0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0926;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
 			singleUnicode(0x0935);
 			break;
 		case 0x0058: //    X श्   0x0936(श)  0x094D(्) पक्का नहीं है जो कर रहे है सही है या नहीं क्योंकि S भी यही कर रहा है।
@@ -844,9 +881,9 @@ void shushaToUnicode()
 			singleUnicodeWithNextCamma(0x0922);
 			break;
 		case 0x005B: //  [      इ   0x0907( इ  )  [- ई
-			if(shushaUtf16[shushaUtf16Index + 1] == 0x002D)
+			if(shushaUtf16Buf[shushaUtf16BufIndex + 1] == 0x002D)
 			{
-				shushaUtf16Index++;
+				shushaUtf16BufIndex++;
 				singleUnicode(0x0908);
 			}
 			else
@@ -864,42 +901,42 @@ void shushaToUnicode()
 			singleUnicode(0x0945);
 			break;
 		case 0x005F: //  _   द्द    द् द  0x0926(द)  0x094D(्)  0x0926(द )
-			unicodeBuf[unicodeIndex++] =  0x0926;
-			unicodeBuf[unicodeIndex++] =  0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0926;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
 			singleUnicode(0x0926);
 			break;
 		case 0x0060: //     `       ्र   0x094D(्)  0x0930(र )
 			iTemp = iFlag;
-			if(unicodeBuf[unicodeIndex - 1] == 0x094D)
+			if(hindiUtf16Buf[hindiUtf16BufIndex - 1] == 0x094D)
 			{
 				singleUnicode(0x0930);
 			}
 			else
 			{
-				unicodeBuf[unicodeIndex++] =  0x094D;
+				hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
 				singleUnicode(0x0930);
 			}
 			if( (iTemp == 1) && (isVowel(0) == 1))
 			{
-				shushaUtf16Index++;
-				shushaUtf16Code = shushaUtf16[shushaUtf16Index];
+				shushaUtf16BufIndex++;
+				shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 			}
 			break;
 		case 0x0061: //    a   ा     0x093E( ा )
-			oCurrection = shushaUtf16[shushaUtf16Index + 1];
+			oCurrection = shushaUtf16Buf[shushaUtf16BufIndex + 1];
 			switch (oCurrection)
 			{
 			case 'o' :  // 6F treat it as ो
-				unicodeBuf[unicodeIndex++] =  0x094B;
-				shushaUtf16Index++;
-				shushaUtf16Index++;
-				shushaUtf16Code = shushaUtf16[shushaUtf16Index];
+				hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094B;
+				shushaUtf16BufIndex++;
+				shushaUtf16BufIndex++;
+				shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 				break;
 			case 'O' :  // 6F treat it as ो
-				unicodeBuf[unicodeIndex++] =  0x094C;
-				shushaUtf16Index++;
-				shushaUtf16Index++;
-				shushaUtf16Code = shushaUtf16[shushaUtf16Index];
+				hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094C;
+				shushaUtf16BufIndex++;
+				shushaUtf16BufIndex++;
+				shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 				break;
 			default :
 				singleUnicode(0x093E);
@@ -929,8 +966,8 @@ void shushaToUnicode()
 		case 0x0069: //    i   ि  0x093F( ि  )
 			//singleUnicode(0x093F);
 			iFlag =  1;
-			shushaUtf16Index++;
-			shushaUtf16Code = shushaUtf16[shushaUtf16Index];
+			shushaUtf16BufIndex++;
+			shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 			break;
 		case 0x006A: //   j   ज्     0x091C(ज)  0x094D(्)
 			doubleUnicode(0x091C);
@@ -972,13 +1009,13 @@ void shushaToUnicode()
 			doubleUnicode(0x0935);
 			break;
 		case	0x0077: //   w  द्ध  0x0926(द)  0x094D(्)  0x0927(ध)
-			unicodeBuf[unicodeIndex++] =  0x0926;
-			unicodeBuf[unicodeIndex++] =  0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0926;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
 			singleUnicode(0x0927);
 			break;
 		case	0x0078: //  x क्ष्   0x0915(क)  0x094D(्)  0x0937(ष)  0x094D(्)
-			unicodeBuf[unicodeIndex++] =  0x0915;
-			unicodeBuf[unicodeIndex++] =  0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0915;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
 			doubleUnicode(0x0937);
 			break;
 		case 0x0079: //   y  य्  0x092F(य)  0x094D(्)
@@ -988,8 +1025,8 @@ void shushaToUnicode()
 			singleUnicode(0x0920);
 			break;
 		case 0x007B: //    {    ठ्ठ  0x0920( ठ  )  0x094D(्)   0x0920( ठ  )
-			unicodeBuf[unicodeIndex++] =  0x0920;
-			unicodeBuf[unicodeIndex++] =  0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0920;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
 			singleUnicode(0x0920);
 			break;
 		case 0x007C: //    |   अोम मे लगने वाला S जैसा संकेत 0x093D(   )
@@ -999,8 +1036,8 @@ void shushaToUnicode()
 			singleUnicode(0x090A);
 			break;
 		case 0x007E: //     ~  त्र  0x0924( त  )  0x094D(्)   0x0930( र  )
-			unicodeBuf[unicodeIndex++] =  0x0924;
-			unicodeBuf[unicodeIndex++] =  0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0924;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
 			singleUnicode(0x0930);
 			break;
 		case 0x00B2: //!  178     0xD1 dec 0209
@@ -1035,20 +1072,20 @@ void shushaToUnicode()
 			break;
 		case 0x00C9: // रु 191 0x0930(  र  )   0x0942(ु)
 			singleUnicode(0x0930);
-			unicodeBuf[unicodeIndex++] =  0x0942;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0942;
 			break;
 		case 0x00CB :  //0x0915(क ) 0x094D(्) 0x0930(  र  )
-			unicodeBuf[unicodeIndex++] =  0x0915;
-			unicodeBuf[unicodeIndex++] =  0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0915;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
 			singleUnicode(0x0930);
 			break;
 		case 0x00CC :  //0x0915(क ) 0x094D(्) 0x0930(  र  )
-			unicodeBuf[unicodeIndex++] =  0x0915;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x0915;
 			singleUnicode(0x0943);
 					break;
 		case 0x00CD :  // 205 cd    0x092B(फ ) 0x094D(्) 0x0930(  र  )
-			unicodeBuf[unicodeIndex++] =  0x092B;
-			unicodeBuf[unicodeIndex++] =  0x094D;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x092B;
+			hindiUtf16Buf[hindiUtf16BufIndex++] =  0x094D;
 			singleUnicode(0x0930);
 			break;
 		case	0x00D0 : //208  0xD0   ँ चन्द्र बिन्दू  0x901(ँ)
@@ -1065,7 +1102,7 @@ void shushaToUnicode()
 			break;
 		}
 	}
-	unicodeBuf[unicodeIndex] = 0x0000;
+	hindiUtf16Buf[hindiUtf16BufIndex] = 0x0000;
 	return ;
 }
 
