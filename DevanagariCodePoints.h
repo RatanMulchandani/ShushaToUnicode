@@ -10,10 +10,10 @@
 #define DEVANAGARICODEPOINTS_H_
 
 //various sign
-#define  INVERTED_CHANDRABINDU  0x0900
-#define CHANDRABINDU            0x0901
-#define ANUSUVRA                0x0902
-#define VISARGA                 0x0903
+#define SIGN_INVERTED_CHANDRABINDU   0x0900
+#define SIGN_CHANDRABINDU            0x0901
+#define SIGN_ANUSUVRA                0x0902
+#define SIGN_VISARGA                 0x0903
 
 //Independent vowels
 #define LETTER_SHORT_A          0x0904
@@ -23,10 +23,10 @@
 #define LETTER_II               0x0908
 #define LETTER_U                0x0909
 #define LETTER_UU               0x090A
-#define VOCALIC_R               0x090B
-#define VOCALIC_L               0x090C
-#define CHANRA_E                0x090D
-#define SHORT_E                 0x090E
+#define LETTER_VOCALIC_R        0x090B
+#define LETTER_VOCALIC_L        0x090C
+#define LETTER_CHANRA_E         0x090D
+#define LETTER_SHORT_E          0x090E
 #define LETTER_E                0x090F
 #define LETTER_AI               0x0910
 #define LETTER_CHANRA_O         0x0911
