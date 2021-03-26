@@ -789,7 +789,7 @@ void shushaUtf16ToHindiUtf16()
 				singleUnicode(SIGN_VISARGA);
 			}
 			break;
-		case SEMICOLON_IS_LETTER_VOCALIC_R: //      ;    लृ नहीं पता सही है?  0x090C
+		case SEMICOLON_IS_LETTER_VOCALIC_L: //      ;    लृ नहीं पता सही है?  0x090C
 			singleUnicode(LETTER_VOCALIC_L);
 			break;
 		case LESSTHAN_SIGN_IS_HALF_TA: //     <   त्       0x0924(त)  0x094D(्)
@@ -803,7 +803,7 @@ void shushaUtf16ToHindiUtf16()
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  SIGN_VIRAMA;
 			singleUnicode(LETTER_TA);
 			break;
-		case QUESTIONMARK_IS_LETTERVOCALIC_R: //    ?   ऋ          0x090B(ऋ)
+		case QUESTIONMARK_IS_LETTER_VOCALIC_R: //    ?   ऋ          0x090B(ऋ)
 			singleUnicode(LETTER_VOCALIC_R);
 			break;
 		case AT_SIGN_IS_HALK_KA: // @  क्            0x0915(क) 0x094D(्)
@@ -812,42 +812,42 @@ void shushaUtf16ToHindiUtf16()
 		case LATIN_CAP_A_IS_LETTER_A: //  A  अ           0x0905(अ)
 			singleUnicode(LETTER_A);
 			break;
-		case 0x0042: //  B   भ्          0x092D(भ)  0x094D(्)
+		case LATIN_CAP_B_IS_HALF_BHA: //  B   भ्          0x092D(भ)  0x094D(्)
 			doubleUnicode(LETTER_BHA);
 			break;
-		case 0x0043: //   C  छ         0x091B(छ)
+		case LATIN_CAP_C_IS_LETTER_CHA: //   C  छ         0x091B(छ)
 			singleUnicodeWithNextCammaAndSideR(LETTER_CHA);
 			break;
-		case 0x0044: //   D  ड         0x0921(ड)
+		case LATIN_CAP_D_IS_LETTER_DDA: //   D  ड         0x0921(ड)
 			singleUnicodeWithNextCammaAndSideR(LETTER_DDA);
 			break;
-		case 0x0045: //    E   श्र्      0x0936(श)  0x094D(्)  0x0930(र)  0x094D(्)
+		case LATIN_CAP_E_IS_HALF_SHA__HALF_RA: //    E   श्र्      0x0936(श)  0x094D(्)  0x0930(र)  0x094D(्)
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  LETTER_SHA;
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  SIGN_VIRAMA;
 			doubleUnicode(LETTER_RA);
 			break;
-		case 0x0046: //    F    फ्     0x092B(फ)  0x094D(्)
+		case LATIN_CAP_F_IS_HALF_PHA: //    F    फ्     0x092B(फ)  0x094D(्)
 			doubleUnicode(LETTER_PHA);
 			break;
-		case 0x0047: //    G   घ्    0x0918(घ)  0x094D(्)
+		case LATIN_CAP_G_IS_HALF_GHA: //    G   घ्    0x0918(घ)  0x094D(्)
 			doubleUnicode(LETTER_GHA);
 			break;
-		case 0x0048: //    H  ञ    0x091E(ञ)
+		case LATIN_CAP_H_IS_LETTER_NYA: //    H  ञ    0x091E(ञ)
 			singleUnicode(LETTER_NYA);
 			break;
-		case 0x0049: //   I   ी   0x0940( ी)
+		case LATIN_CAP_I_IS_VOWEL_SIGN_II: //   I   ी   0x0940( ी)
 			singleUnicode(VOWEL_SIGN_II );
 			break;
-		case 0x004A: //   J    झ्     0x091D(झ)  0x094D(्)
+		case LATIN_CAP_J_IS_HALF_JHA: //   J    झ्     0x091D(झ)  0x094D(्)
 			doubleUnicode(LETTER_JHA);
 			break;
-		case 0x004B: //  K   ख     0x0916(ख)
+		case LATIN_CAP_K_IS_LETTER_KHA: //  K   ख     0x0916(ख)
 			singleUnicodeWithNextCammaAndSideR(LETTER_KHA);
 			break;
-		case 0x004C:  // L   ळ     0x0933( ळ)
-			singleUnicode(LETTER_KHA);
+		case LATIN_CAP_L_IS_LETTER_LLA:  // L   ळ     0x0933( ळ)
+			singleUnicode(LETTER_LLA);
 			break;
-		case 0x004D: //    M ं     0x0902( ं)
+		case LATIN_CAP_M_IS_SIGN_ANUSUVRA: //    M ं     0x0902( ं)
 			if(checkswapForM() == 0)
 			{
 				if(iFlag)
@@ -858,50 +858,50 @@ void shushaUtf16ToHindiUtf16()
 				singleUnicode(SIGN_ANUSUVRA);
 			}
 			break;
-		case 0x004E: //   N  ण्   0x0923(ण)  0x094D(्)
+		case LATIN_CAP_N_IS_LETTER_NNA: //   N  ण्   0x0923(ण)  0x094D(्)
 			doubleUnicode(LETTER_NNA);
 			break;
-		case 0x004F: //    O   ै  0x0948(  ै)
+		case LATIN_CAP_O_IS_VOWEL_SIGN_AI: //    O   ै  0x0948(  ै)
 			singleUnicode(VOWEL_SIGN_AI);
 			break;
-		case 0x0050: //   P    प्   0x092A(प)  0x094D(्)
+		case LATIN_CAP_P_IS_LETTER_PA: //   P    प्   0x092A(प)  0x094D(्)
 			doubleUnicode(LETTER_PA );
 			break;
-		case 0x0051: //    Q  ध्     0x0927(ध)  0x094D(्)
+		case LATIN_CAP_Q_IS_LETTER_DHA: //    Q  ध्     0x0927(ध)  0x094D(्)
 			doubleUnicode(LETTER_DHA);
 			break;
-		case 0x0052: //    R     ृ    0x0943(  ृ)
+		case LATIN_CAP_R_IS_VOWEL_SIGN_VOCALIC_R: //    R     ृ    0x0943(  ृ)
 			singleUnicode(VOWEL_SIGN_VOCALIC_R);
 			break;
-		case 0x0053: //    S    श्    0x0936(श)  0x094D(्)
+		case LATIN_CAP_S_IS_LETTER_SHA: //    S    श्    0x0936(श)  0x094D(्)
 			doubleUnicode(LETTER_SHA);
 			break;
-		case 0x0054: //   T     ट     0x091F(   ट )
+		case LATIN_CAP_T_IS_LETTER_TTA: //   T     ट     0x091F(   ट )
 			singleUnicodeWithNextCammaAndSideR(LETTER_TTA);
 			break;
-		case 0x0055: //   U    ू    0x0942( ू )
+		case LATIN_CAP_U_IS_VOWEL_SIGN_UU: //   U    ू    0x0942( ू )
 			singleUnicode(VOWEL_SIGN_UU);
 			break;
-		case 0x0056: //    V   द्य    "द् य"    0x0926(द)  0x094D(्)  0x092F(य )
+		case LATIN_CAP_V_IS_HALF_DAYA: //    V   द्य    "द् य"    0x0926(द)  0x094D(्)  0x092F(य )
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  LETTER_DA ;
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  SIGN_VIRAMA;
 			singleUnicode(LETTER_YA);
 			break;
-		case 0x0057: //    W     द्व       0x0926(द)  0x094D(्)  0x0935(व )
+		case LATIN_CAP_W_IS_HALF_DAVA: //    W     द्व       0x0926(द)  0x094D(्)  0x0935(व )
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  LETTER_DA ;
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  SIGN_VIRAMA;
 			singleUnicode(LETTER_VA );
 			break;
-		case 0x0058: //    X श्   0x0936(श)  0x094D(्) पक्का नहीं है जो कर रहे है सही है या नहीं क्योंकि S भी यही कर रहा है।
+		case LATIN_CAP_X_IS_HALF_SHA: //    X श्   0x0936(श)  0x094D(्) पक्का नहीं है जो कर रहे है सही है या नहीं क्योंकि S भी यही कर रहा है।
 			doubleUnicode(LETTER_SHA);
 			break;
-		case 0x0059: //   Y  ष्      0x0937( ष् )
+		case LATIN_CAP_Y_IS_LETTER_SSA: //   Y  ष्      0x0937( ष् )
 			doubleUnicode(LETTER_SSA );
 			break;
-		case 0x005A: //   Z   ढ    0x0922( ढ  )
+		case LATIN_CAP_Z_IS_LETTER_DDHA: //   Z   ढ    0x0922( ढ  )
 			singleUnicodeWithNextCammaAndSideR(LETTER_DDHA );
 			break;
-		case 0x005B: //  [      इ   0x0907( इ  )  [- ई
+		case LEFT_SQUARE_BRACKET_IS_LETTER_I: //  [      इ   0x0907( इ  )  [- ई
 			if(shushaUtf16Buf[shushaUtf16BufIndex + 1] == HYPHEN_MINUS_IS_HALF_RA)
 			{
 				shushaUtf16BufIndex++;
@@ -912,21 +912,21 @@ void shushaUtf16ToHindiUtf16()
 				singleUnicode(LETTER_I);
 			}
 			break;
-		case 0x005C: //  \      ्   0x094D(  ्  )
+		case BACKSLASH_IS_SIGN_VIRAMA: //  \      ्   0x094D(  ्  )
 			singleUnicode(SIGN_VIRAMA);
 			break;
-		case 0x005D: //  ]   उ  0x0909(   उ  )
+		case RIGHT_SQUARE_BRACKET_IS_LETTER_U: //  ]   उ  0x0909(   उ  )
 			singleUnicode(LETTER_U);
 			break;
-		case 0x005E: //  ^   ॅ    0x0945(  ॅ  )
+		case CIRCUMFLEX_ACCENT_IS_SIGN_CHANDRA_E: //  ^   ॅ    0x0945(  ॅ  )
 			singleUnicode(VOWEL_SIGN_CHANDRA_E);
 			break;
-		case 0x005F: //  _   द्द    द् द  0x0926(द)  0x094D(्)  0x0926(द )
+		case LOW_LINE_IS_LETTER_DA_VIRAMA_DA: //  _   द्द    द् द  0x0926(द)  0x094D(्)  0x0926(द )
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  LETTER_DA ;
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  SIGN_VIRAMA;
 			singleUnicode(LETTER_DA );
 			break;
-		case 0x0060: //     `       ्र   0x094D(्)  0x0930(र )
+		case GRAVE_ACCENT_IS_SIGN_VIRAMA_LETTER_RA: //     `       ्र   0x094D(्)  0x0930(र )
 			iTemp = iFlag;
 			if(hindiUtf16Buf[hindiUtf16BufIndex - 1] == SIGN_VIRAMA)
 			{
@@ -943,17 +943,17 @@ void shushaUtf16ToHindiUtf16()
 				shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 			}
 			break;
-		case 0x0061: //    a   ा     0x093E( ा )
+		case LATIN_SML_A_IS_VOWEL_SIGN_AA: //    a   ा     0x093E( ा )
 			oCurrection = shushaUtf16Buf[shushaUtf16BufIndex + 1];
 			switch (oCurrection)
 			{
-			case 'o' :  // 6F treat it as ो
+			case LATIN_SML_O :  // 6F treat it as ो
 				hindiUtf16Buf[hindiUtf16BufIndex++] =  VOWEL_SIGN_O;
 				shushaUtf16BufIndex++;
 				shushaUtf16BufIndex++;
 				shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 				break;
-			case 'O' :  // 6F treat it as ो
+			case LATIN_CAP_O :  // 6F treat it as ो
 				hindiUtf16Buf[hindiUtf16BufIndex++] =  VOWEL_SIGN_AU;
 				shushaUtf16BufIndex++;
 				shushaUtf16BufIndex++;
@@ -963,163 +963,173 @@ void shushaUtf16ToHindiUtf16()
 				singleUnicode(VOWEL_SIGN_AA);
 			}
 			break;
-		case 0x0062: //    b    ब्   0x092C(ब)  0x094D(्)
+		case LATIN_SML_B_IS_HALF_BA: //    b    ब्   0x092C(ब)  0x094D(्)
 			doubleUnicode(LETTER_BA);
 			break;
-		case 0x0063: //   c   च्    0x091A(च)  0x094D(्)
+		case LATIN_SML_C_IS_HALF_CA: //   c   च्    0x091A(च)  0x094D(्)
 			doubleUnicode(LETTER_CA);
 			break;
-		case 0x0064: //     d  द   0x0926( द)
+		case LATIN_SML_D_IS_LETTER_DA: //     d  द   0x0926( द)
 			singleUnicodeWithNextCammaAndSideR(LETTER_DA );
 			break;
-		case 0x0065: //    e   ए   0x090F(ए )
+		case LATIN_SML_E_IS_LETTER_E: //    e   ए   0x090F(ए )
 			singleUnicode(LETTER_E);
 			break;
-		case 0x0066: //    f   फ   0x092B(फ)
+		case LATIN_SML_F_IS_LETTER_PHA: //    f   फ   0x092B(फ)
 			singleUnicodeWithNextCammaAndSideR(LETTER_PHA);
 			break;
-		case 0x0067: //    g   ग्   0x0917(ग)  0x094D(्)
+		case LATIN_SML_G_IS_HALF_GA: //    g   ग्   0x0917(ग)  0x094D(्)
 			doubleUnicode(LETTER_GA);
 			break;
-		case 0x0068: //    h    ह    0x0939( ह  )
+		case LATIN_SML_H_IS_LETTER_HA: //    h    ह    0x0939( ह  )
 			singleUnicode(LETTER_HA);
 			break;
-		case 0x0069: //    i   ि  0x093F( ि  )
+		case LATIN_SML_I_IS_VOWEL_SIGN_I: //    i   ि  0x093F( ि  )
 			//singleUnicode(VOWEL_SIGN_I );
 			iFlag =  1;
 			shushaUtf16BufIndex++;
 			shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 			break;
-		case 0x006A: //   j   ज्     0x091C(ज)  0x094D(्)
+		case LATIN_SML_J_IS_HALF_JA: //   j   ज्     0x091C(ज)  0x094D(्)
 			doubleUnicode(LETTER_JA);
 			break;
-		case 0x006B: //   k  क    0x0915(क )
+		case LATIN_SML_K_IS_LETTER_KA: //   k  क    0x0915(क )
 			singleUnicodeWithNextCammaAndSideR(LETTER_KA);
 			break;
-		case 0x006C: //   l ल्   0x0932(ल)  0x094D(्)
+		case LATIN_SML_L_IS_HALF_LA: //   l ल्   0x0932(ल)  0x094D(्)
 			doubleUnicode(LETTER_LA);
 			break;
-		case 0x006D: //  m म्    0x092E(म)  0x094D(्)
+		case LATIN_SML_M_IS_HALF_MA: //  m म्    0x092E(म)  0x094D(्)
 			doubleUnicode(LETTER_MA);
 			break;
-		case 0x006E: //   n   न्     0x0928(न)  0x094D(्)
+		case LATIN_SML_N_IS_HALF_NA: //   n   न्     0x0928(न)  0x094D(्)
 			doubleUnicode(LETTER_NA);
 			break;
-		case 0x006F: //   o  े    0x0947( े  )
+		case LATIN_SML_O_IS_VOWEL_SIGN_E: //   o  े    0x0947( े  )
 			singleUnicode(VOWEL_SIGN_E);
 			break;
-		case 0x0070: //   p  प      0x092A(  प )
+		case LATIN_SML_P_IS_LETTER_PA: //   p  प      0x092A(  प )
 			singleUnicodeWithNextCammaAndSideR(LETTER_PA );
 			break;
-		case 0x0071: //   q   थ्    0x0925(थ)  0x094D(्)
+		case LATIN_SML_Q_IS_HALF_THA: //   q   थ्    0x0925(थ)  0x094D(्)
 			doubleUnicode(LETTER_THA);
 			break;
-		case 0x0072: //    r  र     0x0930(  र  )
+		case LATIN_SML_R_IS_LETTER_RA: //    r  र     0x0930(  र  )
 			singleUnicode(LETTER_RA);
 			break;
-		case 0x0073: //   s  स्     0x0938(स)  0x094D(्)
+		case LATIN_SML_S_IS_HALF_SA: //   s  स्     0x0938(स)  0x094D(्)
 			doubleUnicode(LETTER_SA);
 			break;
-		case 0x0074: //   t   त   0x0924(  त  )
+		case LATIN_SML_T_IS_LETTER_TA: //   t   त   0x0924(  त  )
 			singleUnicodeWithNextCammaAndSideR(LETTER_TA);
 			break;
-		case 0x0075: //   u   ु  0x0941(   ु  )
+		case LATIN_SML_U_IS_VOWEL_SIGN_U: //   u   ु  0x0941(   ु  )
 			singleUnicode(VOWEL_SIGN_U);
 			break;
-		case 0x0076: //  v   व्  0x0935(व)  0x094D(्)
+		case LATIN_SML_V_IS_HALF_VA: //  v   व्  0x0935(व)  0x094D(्)
 			doubleUnicode(LETTER_VA );
 			break;
-		case	0x0077: //   w  द्ध  0x0926(द)  0x094D(्)  0x0927(ध)
+		case LATIN_SML_W_IS_LETTER_DA_VIRAMA_DHA: //   w  द्ध  0x0926(द)  0x094D(्)  0x0927(ध)
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  LETTER_DA ;
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  SIGN_VIRAMA;
 			singleUnicode(LETTER_DHA);
 			break;
-		case	0x0078: //  x क्ष्   0x0915(क)  0x094D(्)  0x0937(ष)  0x094D(्)
+		case LATIN_SML_X_IS_LETTER_KA_VIRAMA_SSA: //  x क्ष्   0x0915(क)  0x094D(्)  0x0937(ष)  0x094D(्)
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  LETTER_KA;
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  SIGN_VIRAMA;
 			doubleUnicode(LETTER_SSA );
 			break;
-		case 0x0079: //   y  य्  0x092F(य)  0x094D(्)
+		case LATIN_SML_Y_IS_HALF_YA: //   y  य्  0x092F(य)  0x094D(्)
 			doubleUnicode(LETTER_YA);
 			break;
-		case 0x007A: //  z  ठ      0x0920( ठ  )
+		case LATIN_SML_Z_IS_LETTER_TTHA: //  z  ठ      0x0920( ठ  )
 			singleUnicode(LETTER_TTHA);
 			break;
-		case 0x007B: //    {    ठ्ठ  0x0920( ठ  )  0x094D(्)   0x0920( ठ  )
+		case LEFTCURLYBRAKET_IS_LETTER_TTHA_VIRAMA_TTHA : //    {    ठ्ठ  0x0920( ठ  )  0x094D(्)   0x0920( ठ  )
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  LETTER_TTHA;
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  SIGN_VIRAMA;
 			singleUnicode(LETTER_TTHA);
 			break;
-		case 0x007C: //    |   अोम मे लगने वाला S जैसा संकेत 0x093D(   )
+		case VERTICAL_BAR_IS_SIGN_AVAGRAHA: //    |   अोम मे लगने वाला S जैसा संकेत 0x093D(   )
 			singleUnicode(SIGN_AVAGRAHA);
 			break;
-		case 0x007D: //    }   ऊ   0x090A( ऊ  )
+		case RIGHTCURLYBRAKET_IS_LETTER_UU: //    }   ऊ   0x090A( ऊ  )
 			singleUnicode(LETTER_UU);
 			break;
-		case 0x007E: //     ~  त्र  0x0924( त  )  0x094D(्)   0x0930( र  )
+		case TILDE_IS_LETTER_TA_VIRAMA_RA: //     ~  त्र  0x0924( त  )  0x094D(्)   0x0930( र  )
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  LETTER_TA;
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  SIGN_VIRAMA;
 			singleUnicode(LETTER_RA);
 			break;
-		case 0x00B2: //!  178     0xD1 dec 0209
+// I will be using Latin-1 names for codes above 9F
+		case SUPERSCRIPT_TWO_IS_EXCLAMATION_MARK: // ! = 0x0021 dec 178 utf8-C2B2
 			singleUnicode(EXCLAMATION_MARK);
 			break;
-		case 0x00B8: // , comma   184
+		case SUPERSCRIPT_THREE_IS_LEFT_PARENTHESIS: // ( = 0x0028 dec 179 utf8-C2B3
+			singleUnicode(LEFT_PARENTHESIS);
+			break;
+		case ACUTE_ACCENT_IS_RIGHT_PARENTHESIS: // ) = 0x0029 dec 180 utf8-C2B4
+			singleUnicode(RIGHT_PARENTHESIS);
+			break;
+		case ACUTE_ACCENT_IS_ASTERISK: // * = 0x002A dec 181 utf8-C2B5
+			singleUnicode(ASTERISK);
+			break;
+		case CADILLA_IS_COMMA: // , = 0x002C comma  dec 184 utf8-C2B8
 			singleUnicode(COMMA );
 			break;
-		case 0x00BA: // 186 0xC2 0xBA   full stop . 0x002E
-			singleUnicode(FULL_STOP);
-			break;
-		case 0x00B9: // hyphen -
+		case SUPERSCRIPT_ONE_IS_HYPHEN_MINUS: // hyphen - = 0x002D dec 185 utf8-C2B9
 			singleUnicode(HYPHEN_MINUS);
 			break;
-		case 0x00B3: //(  0xb3 dec 179
-			singleUnicode(0x0028);
+		case MASCULINE_ORDINAL_IS_FULL_STOP: // full stop . 0x002E dec 186 utf8-C2BA
+			singleUnicode(FULL_STOP);
 			break;
-		case 0x00B4: //)  0xb4 dec 180
-			singleUnicode(0x0029);
+		case RIGHTDOUBLEANGLE_IS_LESS_THAN_SIGN: // < 0x003C dec 187 utf8-C2BB
+			singleUnicode(LESS_THAN_SIGN);
 			break;
-		case 0x00C0: //192 Slash(/) 0x002F C0
+		case ONEQUATERFRACTION_IS_GREATER_THAN_SIGN: //> 0x003E dec 188 utf8-C2BC
+			singleUnicode(GREATER_THAN_SIGN);
+			break;
+		case LATIN_A_WITH_GRAVE_IS_SLASH: // Slash(/) 0x002F dec 192 0x00C0   utf8-C380
 			singleUnicode(SLASH);
 			break;
-		case 0x00C2: //194 semicolon ; 0x003B C2
+		case LATIN_A_WITH_CIRCUMFLEX_IS_SEMICOLON: // dec 194 semicolon ; 0x003B utf8-C382
 			singleUnicode(SEMICOLON);
 			break;
-		case 0x00C4: //196 equal = 0x003D  C4
+		case LATIN_A_WITH_DIAERESIS_IS_EQUAL_SIGN: // dec 196 equal = 0x003D  utf8-C384
 			singleUnicode(EQUAL_SIGN);
 			break;
-		case 0x00C6: // ? 0xC6 dec 0198
+		case LATIN_CAPITAL_LETTER_AE_IS_QUESTION_MARK: // ? 0x003F 0xC6 dec 0198 utf8-C386
 			singleUnicode(QUESTION_MARK);
 			break;
-		case 0x00C9: // रु 191 0x0930(  र  )   0x0942(ु)
+		case LETTER_E_WITH_ACUTE_IS_LETTER_RA_SIGNUU: // रु 191 0x0930(र) 0x0942(ु) utf8-C389
 			singleUnicode(LETTER_RA);
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  VOWEL_SIGN_UU;
 			break;
-		case 0x00CB :  //0x0915(क ) 0x094D(्) 0x0930(  र  )
+		case LETTER_E_WITH_DIAERESIS_IS_KAVIRAMARA :  //0x0915(क) 0x094D(्) 0x0930(र) utf8-C38B
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  LETTER_KA;
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  SIGN_VIRAMA;
 			singleUnicode(LETTER_RA);
 			break;
-		case 0x00CC :  //0x0915(क ) 0x094D(्) 0x0930(  र  )
+		case LATIN_I_WITH_GRAVE_IS_KASIGNVOCAKICR:  //0x0915(क)  0x0943(ृ) utf8-C38C
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  LETTER_KA;
 			singleUnicode(VOWEL_SIGN_VOCALIC_R);
-					break;
-		case 0x00CD :  // 205 cd    0x092B(फ ) 0x094D(्) 0x0930(  र  )
+			break;
+		case LATIN_I_WITH_ACUTE_IS_PHAVIRAMARA :  // 205 cd    0x092B(फ ) 0x094D(्) 0x0930(र) utf8-C38D
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  LETTER_PHA;
 			hindiUtf16Buf[hindiUtf16BufIndex++] =  SIGN_VIRAMA;
 			singleUnicode(LETTER_RA);
 			break;
-		case	0x00D0 : //208  0xD0   ँ चन्द्र बिन्दू  0x901(ँ)
+		case LATIN_LETTER_ETH_IS_SIGN_CHANDRABINDU : //208  0xD0   ँ चन्द्र बिन्दू  0x901(ँ) utf8-C390
 			singleUnicode(SIGN_CHANDRABINDU);
 			break;
-		case 0x00D1: //!  0xD1 dec 0209
+		case LATIN_LETTER_NTILDE_IS_EXCLAMATION_MARK: //!  0xD1 dec 0209 utf8-C391
 			singleUnicode(EXCLAMATION_MARK);
 			break;
-		case 0x00D4: //फ़  0xD4 dec 0212
+		case LATIN_O_WITH_CIRCUMFLEX_IS_LETTER_FA: //फ़  0xD4 dec 0212 utf8-C394
 			singleUnicode(LETTER_FA );
 			break;
 		default:
-			singleUnicode(shushaUtf16Code); // no conversion needed for full rwo byte code
+			singleUnicode(shushaUtf16Code); // no conversion needed for full two byte code
 			break;
 		}
 	}
