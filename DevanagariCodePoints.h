@@ -184,7 +184,7 @@
 #define LETTER_GLOTTAL_STOP          0x097D  //  ॽ
 
 //Sindhi implosives
-//#define LETTER_DDDA                0x097E  //  ॾ
+#define LETTER_DDDA                  0x097E  //  ॾ
 #define LETTER_ BBA                  0x097F  //  ॿ
 
 #endif /* DEVANAGARICODEPOINTS_H_ */

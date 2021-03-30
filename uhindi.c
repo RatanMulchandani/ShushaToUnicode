@@ -5,7 +5,7 @@
  * start date: 27 Jan 2021
  * second rewritten version 14 feb 2021
  * version 0.6 now adding comments and flow information 5 March 21
- *
+ * version 0.7 constant being named 26 Mar 21
  *
  */
 
@@ -26,11 +26,12 @@
 
 // I am  assuming  input file having shusha code  is in utf8 . Most of key codes are 7 bit assci with few as
 // 8 bits.  As I don't have shusha technical details I have collected code relation with devganari verns(वर्ण)
-// from web pages available in shusha on abhivyakti.org. The difference among shusha, shusha02 and shusha05 are also
-// unclear to me. Also used keyboard layout found on web to get key vs hindi chars.
+// from web pages available in shusha on abhivyakti-hindi.org. The difference among shusha, shusha02 and shusha05
+// are also unclear to me. Also used keyboard layout for shushaxx found on web to get key vs hindi chars.
 
 // I have used  https://www.pramukhfontconverter.com/hindi/shusha-to-unicode  web service to check
 // conversion or to understand shusha codes
+// Also started using microsoft frontpage to check susha codes vs devanagiri characters.
 
 // prototypes
 // shusha utf8 is converted to shushautf16 as internally program works on 16 bit codes
@@ -92,6 +93,14 @@ int utf8Index;
 // shusha vowel list
 unsigned char shushaPostfixVowelList[] = "aIOoUu,"; // small i is prefix vowel or comma.
 unsigned char halfVaran[] = "%#HYyxXvsSqQnNmljJgGcbBE@<F"; // shusha uses these chars as hindi char with halant
+/*
+ * iFlag explained
+ * iFlag is set when small i is encountered. In shusha small i is used for ि matra. it is used as prefixed
+ *  to character. For example to write कि , shusha code will be "ik".
+ *  Unicode devanagari uses all matra as postfix that is कि will have two unicode codes 0x0915 0x093F
+ *  Knowing this difference we will set this flag whenever we see "i" and then properly place the
+ *   unicode code for ि with next to "i" character.
+*/
 int iFlag; // small ि adjustment indicator
 int halantChar = 0; // halant char indicator
 wint_t shushaUtf16Code; // keep the code shusha in utf16 form
@@ -259,6 +268,7 @@ int processInputShushaFile( FILE *inFp)
 	return 0;
 }
 // single shusha code to single unicode
+//
 void singleUnicode(wint_t codeToUse)
 {
 	halantChar = 0; // indicates it is char with halant. Single code does not have halant
@@ -312,30 +322,39 @@ void doubleUnicode(wint_t codeToUse)
 		iFlag = 0;
 	}
 }
-// index in input to shusha to utf16 converted word, intialised and buffer nil terminated
+// Character read from input file are utf8 coded. we need to convert them in utf16.
+// Converted utf16 susha characters will be easy to map to devanagari unicode(s)
+// Index in input to shusha utf8 buffer to converted each character to  utf16 ,
+// intialised utf16 buffer index pointer to zero and buffer start location set to nil.
 void convertShushaUtf8ToShushaUtf16()
 {
-	unsigned char currentByte;
-	unsigned char secondByte;
+	unsigned char currentByte; // current byte from susha utf8 buffer
+	unsigned char secondByte; // next byte from susha utf8 buffer
 	unsigned char tempByte1;
 	unsigned char tempByte2;
 	unsigned char tempByte3;
-	wint_t currentUtf16;
-
+	wint_t currentUtf16; // converted utf16 susha code.
+//  shusha utf16 buffer initialisation
 	shushaUtf16BufIndex = 0x00;
 	shushaUtf16Buf[shushaUtf16BufIndex] = NULL_CHARACTER;
 
+// start reading shusha input buffer
 	int i = 0;
-	currentByte = shushaUtf8InBuf[i];
-	 while( currentByte) // nil byte end of word
+	currentByte = shushaUtf8InBuf[i]; // nil indicates end of input
+	 while( currentByte) // nil byte end of input
 	 {
+		 //utf8 encoding
+		 // 1 byte is 0xxx xxxx covers 7 bits ascii
+		 // 2 bytes is 110xxxxx  10xxxxxx covers 11 bits ie 0x7FF
+		 // 3 bytes is 1110xxxx 10xxxxxx 10xxxxxx covers 16 bits ie 0xFFFF
+		 // Full details at https://en.wikipedia.org/wiki/UTF-8
+
 		 // check if it has 8th bit zero. if yes then it is seven bit ascii
 		 if((currentByte  & 0x80) == 0x00 ) // it is single byte
 		 {
-			 currentUtf16 = 0x0000 + currentByte;
+			 currentUtf16 = 0x0000 + currentByte; // make it 16 bits.
 			 shushaUtf16Buf[shushaUtf16BufIndex++] = currentUtf16;
 			 shushaUtf16Buf[shushaUtf16BufIndex] = NULL_CHARACTER;
-			 //printf("0x%04X ", currentUtf16);
 		 }
 		 else
 		 {
@@ -343,12 +362,14 @@ void convertShushaUtf8ToShushaUtf16()
 			 if((currentByte  & 0xE0) == 0xC0)
 			 {
 				 // get top five bits from first byte
-				 tempByte1 = currentByte & 0x1F;
-				 i++;
+				 tempByte1 = currentByte & 0x1F; // higher five bits of unicode is here
+
+				 i++; // ready to read next byte
 				 secondByte = shushaUtf8InBuf[i];
 				 //get lower six bits from second byte
 				 tempByte2 = secondByte & 0x3F;
-				 // move lower 2 bit to position 6 and 7 to be added to form lower byte of two bytes 0x07ff max value code
+				 // move lower 2 bit to position 6 and 7 to be added to form lower byte of
+				 // two bytes 0x07ff max value code
 				 tempByte3 = (tempByte1 << 6) & 0xC0;
 				 // full lower byte
 				 tempByte2 = tempByte2 | tempByte3;
@@ -360,7 +381,6 @@ void convertShushaUtf8ToShushaUtf16()
 				 currentUtf16  = (currentUtf16  | tempByte2) & 0x07FF;
 				 shushaUtf16Buf[shushaUtf16BufIndex++] = currentUtf16;
 				 shushaUtf16Buf[shushaUtf16BufIndex] = NULL_CHARACTER;
-				// printf("0x%04X ", currentUtf16);
 			 }
 			 else
 			 {
@@ -400,8 +420,6 @@ void convertShushaUtf8ToShushaUtf16()
 					 // save the same
 					 shushaUtf16Buf[shushaUtf16BufIndex++] = currentUtf16;
 					 shushaUtf16Buf[shushaUtf16BufIndex]   = NULL_CHARACTER;
-					// printf("0x%04X ", currentUtf16);
-
 				 }
 				 else
 				 {
@@ -413,11 +431,9 @@ void convertShushaUtf8ToShushaUtf16()
 		 }
 		 i++;
 		currentByte = shushaUtf8InBuf[i];
-		adjustForTopR();
+		adjustForTopR(); //
 		adjustForSideR();
 	 }
-	// printf("\n");
-
 }
 // symbol - is used for putting top ( र्र  ) . It need some fixing in unicode to work properly
 void adjustForTopR()
@@ -425,13 +441,17 @@ void adjustForTopR()
 	wint_t  tempCode1;
 	wint_t  tempCode2;
 	int tempCount;
+	// no adjustment needed if there is only single code
 	if(shushaUtf16BufIndex < 2)
 	{
 		return;
 	}
+    // Character combination "[-" is used as ई in shusha. We need to use proper devanagiri unicode
+	// after finding this combination
 	tempCode1 = shushaUtf16Buf[shushaUtf16BufIndex - 1]; // last char in buffer check for -
 	tempCode2 = shushaUtf16Buf[shushaUtf16BufIndex - 2]; // next last check for [
-	if( (tempCode1 == HYPHEN_MINUS_IS_HALF_RA) && (tempCode2 == 0x005B)) // will be handled in unicode devnagari code conversion
+	if( (tempCode1 == HYPHEN_MINUS_IS_HALF_RA) && (tempCode2 == LEFT_SQUARE_BRACKET))
+		// will be handled in unicode devanagari code conversion for ई
 	{
 		return;
 	}
@@ -440,10 +460,13 @@ void adjustForTopR()
 	{
 		return;
 	}
+	//
 	while(1)
 	{
+		// by pass all vowel before "-" to find first consonant
 		if (isVowel(tempCount) == 0)// it is not vowel. check for half char
 		{
+			// Unable to recollect why half char is need to bypass. Comeback when find reason of doing this
 			int j;
 			j = 0;
     		while(halfVaran[j]) // search for match in array of half chars
@@ -455,6 +478,8 @@ void adjustForTopR()
 				}
 				 j++;
 			 }
+    		//"-" char has to be preceeded  the char to correctly place( र्र ) top half RA
+    		// move all character right to make space by putting "-" at correct place
 			for(int i = 2; i <= tempCount; i++)
 			{
 				shushaUtf16Buf[shushaUtf16BufIndex  - (i - 1)] = shushaUtf16Buf[shushaUtf16BufIndex  - i];
@@ -472,7 +497,6 @@ void adjustForTopR()
 // symbol` is used for putting bottom ( र ) . It need some fixing in unicode to work properly
 void adjustForSideR()
 {
-	//0x60     `
 	wint_t  tempCode1;
 	wint_t  tempCode2;
 	int halfVaranFound = 0;
@@ -483,14 +507,15 @@ void adjustForSideR()
 	tempCode1 = shushaUtf16Buf[shushaUtf16BufIndex - 1]; // last char in buffer check for `
 	tempCode2 = shushaUtf16Buf[shushaUtf16BufIndex - 2]; // vowel to exchange if present
 
-	if ((tempCode1 != 0x0060) || (shushaUtf16BufIndex < 2))
+	// no need to proceed if char is no grave accent
+	if ((tempCode1 != SHUSHA_GRAVE_ACCENT) || (shushaUtf16BufIndex < 2))
 	{
 		return;
 	}
-	// half varan followed by a and then `
+	// half varan followed by a and then ` (GRAVE_ACCENT)
 	int j;
 	j = 0;
-	if(shushaUtf16BufIndex > 2) // make sure it has aleast thre chars
+	if(shushaUtf16BufIndex > 2) // make sure it has at least three chars
 	{
 		while(halfVaran[j]) // search for match in array of half chars
 		{
@@ -504,12 +529,13 @@ void adjustForSideR()
 	}
 	if ( (isVowel(2) == 1) &&  (halfVaranFound == 0))// it is  vowel. check for half char
 	{
+		// swap matra with halant as matra has to appear after side R code
 		shushaUtf16Buf[shushaUtf16BufIndex - 2] = tempCode1;
 		shushaUtf16Buf[shushaUtf16BufIndex - 1] = tempCode2;
 	}
 }
 
-//char is not a vowel ि is not considered because it appears before consonent
+//char is not a vowel if returns 0.  ि is not considered because it appears before consonent
 int isVowel(int indexOffSet)
 {
 	wint_t tempChar;
@@ -521,7 +547,6 @@ int isVowel(int indexOffSet)
 	int i = 0;
 	while(shushaPostfixVowelList[i])
 	{
-
 		if(tempChar == (wint_t)shushaPostfixVowelList[i])
 		{
 			return 1;
@@ -549,20 +574,18 @@ void encodeUtf16ToUtf8(wint_t codeToUse)
 		return;
 	}
 	// two byte code. assemble in two bytes with first byte as 110x xxxx and second byte as 10xx xxxx
+	// It can be max value of 0x07FF
 	if(tempCode < 0x0800)
 	{
 		tempByte1 = 0xC0; // start indicator of  first byte of two byte utf8
 		tempByte2 = (tempCode >> 6) & 0x1F;
 		tempByte1 = tempByte1 | tempByte2;
 		utf8Buffer[utf8Index++] =  tempByte1;
-		//printf("0x%02X ", tempByte1);
 
 		tempByte1 = 0x80; // start indicator of second byte utf8
 		tempByte2 = tempCode  & 0x3F;
 		tempByte1 = tempByte1 | tempByte2;
 		utf8Buffer[utf8Index++] =  tempByte1;
-		//printf("0x%02X ", tempByte1);
-
 		return;
 	}
 	//No need to check as it is max ffff which can be accomodated in three bytes
@@ -570,21 +593,17 @@ void encodeUtf16ToUtf8(wint_t codeToUse)
 	tempByte2 = (tempCode >> 12) & 0x0F; // get highest 4 bits 15, 14, 13, 12
 	tempByte1 = tempByte1 | tempByte2; // add to first byte with start signature of 0xE0
 	utf8Buffer[utf8Index++] =  tempByte1;
-	//printf("0x%02X ", tempByte1);
 
 	tempByte1 = 0x80; // start indicator of second byte utf8
 	tempByte2 = (tempCode >> 6) & 0x3F;// get bit 11, 10, 9, 8, 7, 6 ie six bits to go with next byte
 	tempByte1 = tempByte1 | tempByte2;
 	utf8Buffer[utf8Index++] =  tempByte1;
-	//printf("0x%02X ", tempByte1);
 
 	tempByte1 = 0x80; // start indicator of second byte utf8
 	tempByte2 = tempCode  & 0x3F; // get lowest six bit and add to third byte.
 	tempByte1 = tempByte1 | tempByte2;
 	utf8Buffer[utf8Index++] =  tempByte1;
-	//printf("0x%02X ", tempByte1);
 	return;
-
 }
 //
 int checkswapForM()
@@ -674,28 +693,37 @@ void nextCodeWithIflagCheck()
 	shushaUtf16BufIndex++;
 	shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 }
-// main fuction with big switch. Can not think any other algorithm
+// main function with big switch. Can not think any other algorithm for mapping problem
+// I am using globals to keep code simple while calling functions.
+// Even thou using globals is considered bad but I think for this type of activity
+// it is ok to go for globals
 void shushaUtf16ToHindiUtf16()
 {
 	int iTemp;
-	//printf("In code converter\n");
 	shushaUtf16BufIndex = 0;
 	hindiUtf16BufIndex = 0;
+	//
 	wint_t oCurrection;
+	// This flag indicates that the char is half char ie there is halant with char.
 	halantChar = 0;
-	// get first code of word being converted
+	// The word is defined as white space on both sides. It read from input file and
+	// after converting to utf16 is placed in global buffer named shushaUtf16Buf
+	// shushaUtf16BufIndex is used as global index to currently unprocessed char
+	// get first code of input word needs to converted to hindi unicode
 	shushaUtf16Code = shushaUtf16Buf[shushaUtf16BufIndex];
 
-	//end of word is nil terminated
+	//end of input word is identified by nil termination
 	while (shushaUtf16Code != NULL_CHARACTER )
 	{
-		//
+		//names of constant is created by using Ascii name in capital letters
+		// followed by _IS_ and then unicode hindi name as in unicode standard with some simplification
 		switch(shushaUtf16Code)
 		{
-		case EXCLAIMATION_MARK_IS_OM :    // !   ॐ   0x0950
-			singleUnicode(DEVANAGARI_OM );
+		case EXCLAIMATION_MARK_IS_OM :    // ! = ॐ  0x0021 ->  0x0950
+			singleUnicode(DEVANAGARI_OM ); // one to one mapping no processing
 			break;
-		case HASHTAG_IS_HALF_KHA : //   #   ख् 0x0916(ख) 0x094D(्)
+
+		case HASHTAG_IS_HALF_KHA : //   # = ख् 0x0023 = ( 0x0916(ख) 0x094D(्))
 			doubleUnicode( LETTER_KHA);
 			break;
 		case DOLLAR_SIGN_IS_RAU : //  $   रू  0x0930(र)  0x0942(ू)
